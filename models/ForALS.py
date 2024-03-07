@@ -308,7 +308,7 @@ class Clustering:
             diseases = []
 
             while per > threshold_percentage:
-
+                # print(sorted_df)
                 disease = sorted_df.iloc[i]['numeric_trackable_name']
                 percent = sorted_df.iloc[i]['count'] / total_count
                 percent_of_total = percent_of_total + percent
