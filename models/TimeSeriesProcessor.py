@@ -12,11 +12,12 @@ class TimeSeriesDataProcessor:
     """
     
     @staticmethod
-    def load_csv(filename):
+    def load_csv(filename, path):
         """
         Load CSV file.
         """
-        file = 'data/'+filename+'.csv'
+        
+        file = path+filename+'.csv'
         return pd.read_csv(file, low_memory=False)
     
     @staticmethod
