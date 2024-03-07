@@ -37,11 +37,10 @@ class ForALS:
         
         return itemid_to_id, userid_to_id, id_to_itemid, id_to_userid
     
-    # split to train, test, val
+    # split to train, test, val percent
     @staticmethod
-    def split_to_train_val_test(df, percent_train = 0.7):
+    def split_to_train_val_test_percent(df, percent_train = 0.7):
 
-        
         data_sorted = df.sort_values(by=['checkin_date'])
         grouped_data = data_sorted.groupby(by='numeric_user_id')
 
@@ -73,6 +72,36 @@ class ForALS:
         val_df = pd.concat(val_data)
 
         return train_df, val_df, test_df
+    
+    # split to train, test - last day
+    @staticmethod
+    def split_to_train_test_last_day(df):
+        """
+        df_clean необходимо разделить на train и test: 
+        test выбирает по последней дате записи пользователя 
+        train: все до последней даты, 
+        test: последняя дата
+        """
+        
+        df_clean_sorted = df.sort_values(by=['numeric_user_id', 'checkin_date'])
+        grouped_df = df_clean_sorted.groupby('numeric_user_id')
+
+        train_data = []
+        test_data = []
+
+        for user_id, group_df in grouped_df:
+            # Получаем последнюю дату для данного пользователя
+            last_date = group_df['checkin_date'].max()
+            # Выбираем все записи кроме последней даты для обучающего набора
+            train_data.append(group_df[group_df['checkin_date'] != last_date])
+            # Выбираем все записи на последнюю дату для тестового набора
+            test_data.append(group_df[group_df['checkin_date'] == last_date])
+
+        train_df = pd.concat(train_data)
+        test_df = pd.concat(test_data)
+
+        return train_df, test_df
+    
     
     @staticmethod
     def figure_umap_embeddings(model_als, umap_emb, name):
