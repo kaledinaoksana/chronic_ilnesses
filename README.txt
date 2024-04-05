@@ -17,3 +17,5 @@ pip install -U scikit-learn
 прописать путь к папке с данными
 
 /data
+
+source ods_nlp_env/bin/activate

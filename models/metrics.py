@@ -33,7 +33,7 @@ def novelty(predicted: List[list], pop: dict, u: int, n: int) -> (float, list):
         The novelty of the recommendations in system level
     mean_self_information:
         The novelty of the recommendations in recommended top-N list level
-    ----------    
+    ----------
     Metric Defintion:
     Zhou, T., Kuscsik, Z., Liu, J. G., Medo, M., Wakeling, J. R., & Zhang, Y. C. (2010).
     Solving the apparent diversity-accuracy dilemma of recommender systems.
@@ -45,12 +45,15 @@ def novelty(predicted: List[list], pop: dict, u: int, n: int) -> (float, list):
         self_information = 0
         k += 1
         for i in sublist:
-            self_information += np.sum(-np.log2(pop[i]/u))
-        mean_self_information.append(self_information/n)
-    novelty = sum(mean_self_information)/k
+            self_information += np.sum(-np.log2(pop[i] / u))
+        mean_self_information.append(self_information / n)
+    novelty = sum(mean_self_information) / k
     return novelty, mean_self_information
 
-def prediction_coverage(predicted: List[list], catalog: list, unseen_warning: bool=False) -> float:
+
+def prediction_coverage(
+    predicted: List[list], catalog: list, unseen_warning: bool = False
+) -> float:
     """
     Computes the prediction coverage for a list of recommendations
     Parameters
@@ -62,7 +65,7 @@ def prediction_coverage(predicted: List[list], catalog: list, unseen_warning: bo
         A list of all unique items in the training data
         example: ['A', 'B', 'C', 'X', 'Y', Z]
     unseen_warn: bool
-        when prediction gives any item unseen in catalog: 
+        when prediction gives any item unseen in catalog:
             (1) ignore the unseen item and warn
             (2) or raise an exception.
     Returns
@@ -70,31 +73,36 @@ def prediction_coverage(predicted: List[list], catalog: list, unseen_warning: bo
     prediction_coverage:
         The prediction coverage of the recommendations as a percent
         rounded to 2 decimal places
-    ----------    
+    ----------
     Metric Defintion:
     Ge, M., Delgado-Battenfeld, C., & Jannach, D. (2010, September).
     Beyond accuracy: evaluating recommender systems by coverage and serendipity.
     In Proceedings of the fourth ACM conference on Recommender systems (pp. 257-260). ACM.
     """
-    
+
     unique_items_catalog = set(catalog)
-    if len(catalog)!=len(unique_items_catalog):
+    if len(catalog) != len(unique_items_catalog):
         raise AssertionError("Duplicated items in catalog")
 
     predicted_flattened = [p for sublist in predicted for p in sublist]
     unique_items_pred = set(predicted_flattened)
-    
+
     if not unique_items_pred.issubset(unique_items_catalog):
         if unseen_warning:
-            warnings.warn("There are items in predictions but unseen in catalog. "
-                "They are ignored from prediction_coverage calculation")
+            warnings.warn(
+                "There are items in predictions but unseen in catalog. "
+                "They are ignored from prediction_coverage calculation"
+            )
             unique_items_pred = unique_items_pred.intersection(unique_items_catalog)
         else:
-            raise AssertionError("There are items in predictions but unseen in catalog.")
-    
+            raise AssertionError(
+                "There are items in predictions but unseen in catalog."
+            )
+
     num_unique_predictions = len(unique_items_pred)
-    prediction_coverage = round(num_unique_predictions/(len(catalog)* 1.0)* 100, 2)
+    prediction_coverage = round(num_unique_predictions / (len(catalog) * 1.0) * 100, 2)
     return prediction_coverage
+
 
 def catalog_coverage(predicted: List[list], catalog: list, k: int) -> float:
     """
@@ -115,7 +123,7 @@ def catalog_coverage(predicted: List[list], catalog: list, k: int) -> float:
     catalog_coverage:
         The catalog coverage of the recommendations as a percent
         rounded to 2 decimal places
-    ----------    
+    ----------
     Metric Defintion:
     Ge, M., Delgado-Battenfeld, C., & Jannach, D. (2010, September).
     Beyond accuracy: evaluating recommender systems by coverage and serendipity.
@@ -124,8 +132,9 @@ def catalog_coverage(predicted: List[list], catalog: list, k: int) -> float:
     sampling = random.choices(predicted, k=k)
     predicted_flattened = [p for sublist in sampling for p in sublist]
     L_predictions = len(set(predicted_flattened))
-    catalog_coverage = round(L_predictions/(len(catalog)*1.0)*100,2)
+    catalog_coverage = round(L_predictions / (len(catalog) * 1.0) * 100, 2)
     return catalog_coverage
+
 
 def _ark(actual: list, predicted: list, k=10) -> float:
     """
@@ -143,16 +152,16 @@ def _ark(actual: list, predicted: list, k=10) -> float:
     score : float
         The average recall at k.
     """
-    if len(predicted)>k:
+    if len(predicted) > k:
         predicted = predicted[:k]
 
     score = 0.0
     num_hits = 0.0
 
-    for i,p in enumerate(predicted):
+    for i, p in enumerate(predicted):
         if p in actual and p not in predicted[:i]:
             num_hits += 1.0
-            score += num_hits / (i+1.0)
+            score += num_hits / (i + 1.0)
 
     if not actual:
         return 0.0
@@ -178,7 +187,7 @@ def _apk(actual: list, predicted: list, k=10) -> float:
     """
     if not predicted or not actual:
         return 0.0
-    
+
     if len(predicted) > k:
         predicted = predicted[:k]
 
@@ -190,11 +199,12 @@ def _apk(actual: list, predicted: list, k=10) -> float:
             max_ix = min(i + 1, len(predicted))
             score += _precision(predicted[:max_ix], actual)
             true_positives += 1
-    
+
     if score == 0.0:
         return 0.0
-    
+
     return score / true_positives
+
 
 def mark(actual: List[list], predicted: List[list], k=10) -> float:
     """
@@ -215,9 +225,10 @@ def mark(actual: List[list], predicted: List[list], k=10) -> float:
     if len(actual) != len(predicted):
         raise AssertionError("Length mismatched")
 
-    return np.mean([_ark(a,p,k) for a,p in zip(actual, predicted)])
+    return np.mean([_ark(a, p, k) for a, p in zip(actual, predicted)])
 
-def mapk(actual: List[list], predicted: List[list], k: int=10) -> float:
+
+def mapk(actual: List[list], predicted: List[list], k: int = 10) -> float:
     """
     Computes the mean average precision at k.
     Parameters
@@ -235,8 +246,9 @@ def mapk(actual: List[list], predicted: List[list], k: int=10) -> float:
     """
     if len(actual) != len(predicted):
         raise AssertionError("Length mismatched")
-    
-    return np.mean([_apk(a,p,k) for a,p in zip(actual, predicted)])
+
+    return np.mean([_apk(a, p, k) for a, p in zip(actual, predicted)])
+
 
 def personalization(predicted: List[list]) -> float:
     """
@@ -255,25 +267,31 @@ def personalization(predicted: List[list]) -> float:
     """
 
     def make_rec_matrix(predicted: List[list]) -> sp.csr_matrix:
-        df = pd.DataFrame(data=predicted).reset_index().melt(
-            id_vars='index', value_name='item',
+        df = (
+            pd.DataFrame(data=predicted)
+            .reset_index()
+            .melt(
+                id_vars="index",
+                value_name="item",
+            )
         )
-        df = df[['index', 'item']].pivot(index='index', columns='item', values='item')
-        df = pd.notna(df)*1
+        df = df[["index", "item"]].pivot(index="index", columns="item", values="item")
+        df = pd.notna(df) * 1
         rec_matrix = sp.csr_matrix(df.values)
         return rec_matrix
 
-    #create matrix for recommendations
+    # create matrix for recommendations
     predicted = np.array(predicted)
     rec_matrix_sparse = make_rec_matrix(predicted)
 
-    #calculate similarity for every user's recommendation list
+    # calculate similarity for every user's recommendation list
     similarity = cosine_similarity(X=rec_matrix_sparse, dense_output=False)
 
-    #calculate average similarity
+    # calculate average similarity
     dim = similarity.shape[0]
     personalization = (similarity.sum() - dim) / (dim * (dim - 1))
-    return 1-personalization
+    return 1 - personalization
+
 
 def _single_list_similarity(predicted: list, feature_df: pd.DataFrame, u: int) -> float:
     """
@@ -292,23 +310,24 @@ def _single_list_similarity(predicted: list, feature_df: pd.DataFrame, u: int) -
         The intra-list similarity for a single list of recommendations.
     """
     # exception predicted list empty
-    if not(predicted):
-        raise Exception('Predicted list is empty, index: {0}'.format(u))
+    if not (predicted):
+        raise Exception("Predicted list is empty, index: {0}".format(u))
 
-    #get features for all recommended items
+    # get features for all recommended items
     recs_content = feature_df.loc[predicted]
     recs_content = recs_content.dropna()
     recs_content = sp.csr_matrix(recs_content.values)
 
-    #calculate similarity scores for all items in list
+    # calculate similarity scores for all items in list
     similarity = cosine_similarity(X=recs_content, dense_output=False)
 
-    #get indicies for upper right triangle w/o diagonal
+    # get indicies for upper right triangle w/o diagonal
     upper_right = np.triu_indices(similarity.shape[0], k=1)
 
-    #calculate average similarity score of all recommended items in list
+    # calculate average similarity score of all recommended items in list
     ils_single_user = np.mean(similarity[upper_right])
     return ils_single_user
+
 
 def intra_list_similarity(predicted: List[list], feature_df: pd.DataFrame) -> float:
     """
@@ -331,6 +350,7 @@ def intra_list_similarity(predicted: List[list], feature_df: pd.DataFrame) -> fl
     ils = [_single_list_similarity(predicted[u], feature_df, u) for u in Users]
     return np.mean(ils)
 
+
 def mse(y: list, yhat: np.array) -> float:
     """
     Computes the mean square error (MSE)
@@ -344,6 +364,7 @@ def mse(y: list, yhat: np.array) -> float:
     """
     mse = mean_squared_error(y, yhat)
     return mse
+
 
 def rmse(y: list, yhat: np.array) -> float:
     """
@@ -359,6 +380,7 @@ def rmse(y: list, yhat: np.array) -> float:
     rmse = sqrt(mean_squared_error(y, yhat))
     return rmse
 
+
 def make_confusion_matrix(y: list, yhat: list) -> None:
     """
     Calculates and plots a confusion matrix
@@ -370,31 +392,39 @@ def make_confusion_matrix(y: list, yhat: list) -> None:
     -------
         A confusion matrix plot
     """
-    cm = confusion_matrix(y, yhat, labels=[1,0])
-    cm = np.round(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis],4)*100
+    cm = confusion_matrix(y, yhat, labels=[1, 0])
+    cm = np.round(cm.astype("float") / cm.sum(axis=1)[:, np.newaxis], 4) * 100
 
     fmt = ".2f"
-    _ = cm.max() / 2. # TODO: Unused argument
-    descriptions = np.array([["True Positive", "False Negative"], ["False Positive", "True Negatives"]])
+    _ = cm.max() / 2.0  # TODO: Unused argument
+    descriptions = np.array(
+        [["True Positive", "False Negative"], ["False Positive", "True Negatives"]]
+    )
     colors = np.array([["green", "red"], ["red", "green"]])
-    plt.imshow([[0,0],[0,0]], interpolation='nearest', cmap=plt.cm.Greys)
+    plt.imshow([[0, 0], [0, 0]], interpolation="nearest", cmap=plt.cm.Greys)
     for i, j in product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt)+'%\n' + descriptions[i, j],
-                     horizontalalignment="center",
-                     color=colors[i,j])
+        plt.text(
+            j,
+            i,
+            format(cm[i, j], fmt) + "%\n" + descriptions[i, j],
+            horizontalalignment="center",
+            color=colors[i, j],
+        )
     plt.axhline(y=0.5, xmin=0, xmax=1, color="black", linewidth=0.75)
     plt.axvline(x=0.5, ymin=0, ymax=1, color="black", linewidth=0.75)
-    plt.ylabel('True')
-    plt.xlabel('Predicted')
+    plt.ylabel("True")
+    plt.xlabel("Predicted")
     plt.title("Confusion Matrix")
-    plt.xticks([0,1], [1,0], rotation=45)
-    plt.yticks([0,1], [1,0])
+    plt.xticks([0, 1], [1, 0], rotation=45)
+    plt.yticks([0, 1], [1, 0])
     plt.show()
+
 
 def _precision(predicted, actual):
     prec = [value for value in predicted if value in actual]
     prec = float(len(prec)) / float(len(predicted))
     return prec
+
 
 def recommender_precision(predicted: List[list], actual: List[list]) -> int:
     """
@@ -410,8 +440,10 @@ def recommender_precision(predicted: List[list], actual: List[list]) -> int:
     -------
         precision: int
     """
- 
-    precision = np.mean(list(map(lambda x, y: np.round(_precision(x,y), 4), predicted, actual)))
+
+    precision = np.mean(
+        list(map(lambda x, y: np.round(_precision(x, y), 4), predicted, actual))
+    )
     return precision
 
 
@@ -429,6 +461,7 @@ def recommender_recall(predicted: List[list], actual: List[list]) -> int:
     -------
         recall: int
     """
+
     def calc_recall(predicted, actual):
         reca = [value for value in predicted if value in actual]
         reca = np.round(float(len(reca)) / float(len(actual)), 4)
