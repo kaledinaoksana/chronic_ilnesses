@@ -1,0 +1,30 @@
+[tool.ruff]
+
+src = ["src", "tests"]
+target-version = "py311"
+line-length = 90
+
+extend-select = [
+   "C90",    # mccabe
+   "N",      # pep8-naming
+   "UP",     # pyupgrade
+   "S",      # bandit
+   "BLE",    # flake8-blind-except
+   "B",      # bugbear
+   "C4",     # comprehensions
+   "DTZ",    # datetimez
+   "EM",     # error-messages
+   "FA",     # future-annotations
+   "ISC",    # implicit string concat
+   "PIE",    # flake8-pie
+   "PT",     # flake8-pytest-style
+   "SLF",    # flake8-self
+   "SIM",    # flake8-simplify
+   "ARG",    # flake8-unused-argument
+   "ERA",    # eradicate commented out code
+   "TRY",    # tryceratops
+]
+
+[tool.ruff.extend-per-file-ignores]
+"migrations/**.py" = ["E501"]   # line length
+"tests/**.py" = ["S101"]  # use of `assert`
